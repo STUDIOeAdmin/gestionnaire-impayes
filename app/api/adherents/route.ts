@@ -52,12 +52,23 @@ export async function GET(req: NextRequest) {
     orderBy: { nom: 'asc' },
   });
 
+  // Index famille → membres pour les sous-titres
+  const familleIndex = new Map<string, { prenom: string; numeroDossier: number; id: string }[]>();
+  for (const a of adherents) {
+    if (!a.famille) continue;
+    if (!familleIndex.has(a.famille)) familleIndex.set(a.famille, []);
+    familleIndex.get(a.famille)!.push({ prenom: a.prenom, numeroDossier: a.numeroDossier, id: a.id });
+  }
+
   let result = adherents.map(a => ({
     id: a.id,
     numeroDossier: a.numeroDossier,
     nom: a.nom,
     prenom: a.prenom,
     famille: a.famille,
+    familleMembers: a.famille
+      ? (familleIndex.get(a.famille) ?? []).filter(m => m.id !== a.id)
+      : [],
     statut: a.statut,
     updatedAt: a.updatedAt,
     dernierImpaye: a.impayes[0] ?? null,

@@ -9,6 +9,7 @@ interface Adherent {
   nom: string;
   prenom: string;
   famille: string | null;
+  familleMembers: { prenom: string; numeroDossier: number }[];
   statut: string;
   updatedAt: string;
   dernierImpaye: {
@@ -196,7 +197,6 @@ export default function AdherentsPage() {
               <tr className="border-b text-left" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)' }}>
                 <th className="px-4 py-3 font-medium"><ThBtn col="nom" label="Adhérent" /></th>
                 <th className="px-4 py-3 font-medium text-slate-400">N° dossier</th>
-                <th className="px-4 py-3 font-medium text-slate-400">Famille</th>
                 <th className="px-4 py-3 font-medium text-slate-400">Cours</th>
                 <th className="px-4 py-3 font-medium"><ThBtn col="reste" label="Reste à payer" /></th>
                 <th className="px-4 py-3 font-medium text-slate-400">Total dû</th>
@@ -233,9 +233,13 @@ export default function AdherentsPage() {
                           </span>
                         )}
                       </div>
+                      {a.familleMembers.length > 0 && (
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {a.familleMembers.map(m => `${m.prenom} (n°${m.numeroDossier})`).join(' · ')}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-400">{a.numeroDossier}</td>
-                    <td className="px-4 py-3 text-slate-400 text-sm">{a.famille ?? '—'}</td>
                     <td className="px-4 py-3 text-slate-400 text-xs max-w-[140px] truncate">{a.dernierImpaye?.cours ?? '—'}</td>
                     <td className="px-4 py-3 font-semibold" style={{ color: reste < 0 ? '#a78bfa' : reste === 0 ? '#4ade80' : '#f87171' }}>
                       {reste < 0 ? `−${Math.abs(reste).toFixed(2)} €` : `${reste.toFixed(2)} €`}
