@@ -44,20 +44,21 @@ export async function GET(req: NextRequest) {
 
   if (format === 'simple') {
     const rows = adherents.map(a => ({
+      'N° dossier': a.numeroDossier,
       'Nom': `${a.nom}, ${a.prenom}`,
       'Reste à payer (€)': a.impayes[0]?.resteAPayer ?? '',
     }));
     ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 30 }, { wch: 18 }];
+    ws['!cols'] = [{ wch: 12 }, { wch: 30 }, { wch: 18 }];
     sheetName = 'Relances';
   } else {
     const rows = adherents.map(a => {
       const imp = a.impayes[0];
       const derniereAction = a.contacts[0];
       return {
+        'N° dossier': a.numeroDossier,
         'Nom': a.nom,
         'Prénom': a.prenom,
-        'N° dossier': a.numeroDossier,
         'Famille': a.famille ?? '',
         'Cours': imp?.cours ?? '',
         'Total dû (€)': imp?.totalDu ?? '',
@@ -74,7 +75,7 @@ export async function GET(req: NextRequest) {
     });
     ws = XLSX.utils.json_to_sheet(rows);
     ws['!cols'] = [
-      { wch: 20 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 30 },
+      { wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 20 }, { wch: 30 },
       { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 },
       { wch: 12 }, { wch: 40 }, { wch: 50 },
     ];
