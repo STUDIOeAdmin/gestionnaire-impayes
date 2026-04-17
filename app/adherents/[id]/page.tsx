@@ -34,21 +34,21 @@ interface AdherentDetail {
   impayes: Impaye[];
 }
 
-const TYPE_CONTACT: Record<string, { label: string; color: string }> = {
-  DC:         { label: 'Démarche contact',    color: '#F9CA24' },
-  MAIL:       { label: 'Mail',                color: '#60a5fa' },
-  SMS:        { label: 'SMS',                 color: '#34d399' },
-  TEL:        { label: 'Appel téléphonique',  color: '#f472b6' },
-  PASSAGE:    { label: 'Passage caisse',      color: '#fb923c' },
-  NOTE:       { label: 'Note',                color: '#94a3b8' },
-  REGULARISE: { label: 'Régularisé',          color: '#4ade80' },
+const TYPE_CONTACT: Record<string, { label: string; cls: string }> = {
+  DC:         { label: 'Démarche contact',    cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  MAIL:       { label: 'Mail',                cls: 'bg-blue-50 text-blue-600 border-blue-200' },
+  SMS:        { label: 'SMS',                 cls: 'bg-green-50 text-green-600 border-green-200' },
+  TEL:        { label: 'Appel téléphonique',  cls: 'bg-pink-50 text-pink-600 border-pink-200' },
+  PASSAGE:    { label: 'Passage caisse',      cls: 'bg-orange-50 text-orange-600 border-orange-200' },
+  NOTE:       { label: 'Note',                cls: 'bg-gray-100 text-gray-600 border-gray-200' },
+  REGULARISE: { label: 'Régularisé',          cls: 'bg-green-50 text-green-700 border-green-200' },
 };
 
-const STATUT_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  IMPAYES:    { label: 'Impayé',     color: '#f87171', bg: 'rgba(248,113,113,0.1)' },
-  EN_COURS:   { label: 'En cours',   color: '#F9CA24', bg: 'rgba(249,194,36,0.1)' },
-  TROP_PERCU: { label: 'Trop-perçu', color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' },
-  REGULARISE: { label: 'Régularisé', color: '#4ade80', bg: 'rgba(74,222,128,0.1)' },
+const STATUT_STYLES: Record<string, { label: string; cls: string }> = {
+  IMPAYES:    { label: 'Impayé',     cls: 'bg-red-50 text-red-600 border-red-200' },
+  EN_COURS:   { label: 'En cours',   cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  TROP_PERCU: { label: 'Trop-perçu', cls: 'bg-purple-50 text-purple-600 border-purple-200' },
+  REGULARISE: { label: 'Régularisé', cls: 'bg-green-50 text-green-600 border-green-200' },
 };
 
 export default function FicheAdherent() {
@@ -57,12 +57,10 @@ export default function FicheAdherent() {
   const [adherent, setAdherent] = useState<AdherentDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Formulaire nouveau contact
   const [typeContact, setTypeContact] = useState('DC');
   const [noteContact, setNoteContact] = useState('');
   const [savingContact, setSavingContact] = useState(false);
 
-  // Changement de statut
   const [statutEdit, setStatutEdit] = useState('');
   const [savingStatut, setSavingStatut] = useState(false);
 
@@ -125,7 +123,7 @@ export default function FicheAdherent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-slate-400">Chargement…</div>
+        <div className="text-purple-400">Chargement…</div>
       </div>
     );
   }
@@ -133,8 +131,8 @@ export default function FicheAdherent() {
   if (!adherent) {
     return (
       <div className="text-center py-20">
-        <p className="text-slate-400">Adhérent introuvable.</p>
-        <button onClick={() => router.back()} className="mt-4 text-yellow-400 underline text-sm">Retour</button>
+        <p className="text-gray-400">Adhérent introuvable.</p>
+        <button onClick={() => router.back()} className="mt-4 text-purple-600 underline text-sm">Retour</button>
       </div>
     );
   }
@@ -147,13 +145,13 @@ export default function FicheAdherent() {
       {/* En-tête */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <button onClick={() => router.back()} className="text-sm text-slate-400 hover:text-yellow-400 mb-2 flex items-center gap-1">
+          <button onClick={() => router.back()} className="text-sm text-purple-600 hover:text-purple-900 mb-2 flex items-center gap-1">
             ← Retour à la liste
           </button>
-          <h1 className="text-2xl font-bold text-white">{adherent.nom}, {adherent.prenom}</h1>
-          <p className="text-slate-400 text-sm">N° dossier {adherent.numeroDossier}{adherent.famille ? ` · ${adherent.famille}` : ''}</p>
+          <h1 className="text-2xl font-bold text-purple-900">{adherent.nom}, {adherent.prenom}</h1>
+          <p className="text-gray-500 text-sm">N° dossier {adherent.numeroDossier}{adherent.famille ? ` · ${adherent.famille}` : ''}</p>
         </div>
-        <span className="px-3 py-1.5 rounded-full text-sm font-medium self-start" style={{ color: style.color, backgroundColor: style.bg }}>
+        <span className={`px-3 py-1.5 rounded-full text-sm font-medium border self-start ${style.cls}`}>
           {style.label}
         </span>
       </div>
@@ -162,38 +160,38 @@ export default function FicheAdherent() {
         {/* Colonne principale */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Situation financière (dernier import) */}
+          {/* Situation financière */}
           {dernierImpaye && (
-            <div className="rounded-xl border p-5" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)' }}>
-              <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+            <div className="rounded-xl border border-purple-100 bg-white shadow-sm p-5">
+              <h2 className="font-semibold text-purple-900 mb-4 flex items-center gap-2">
                 Situation financière
-                <span className="text-xs font-normal text-slate-500">— {dernierImpaye.import.nomFichier}</span>
+                <span className="text-xs font-normal text-gray-400">— {dernierImpaye.import.nomFichier}</span>
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                 {[
-                  { label: 'Total dû', value: `${dernierImpaye.totalDu.toFixed(2)} €`, color: '#e2e8f0' },
-                  { label: 'Total payé', value: `${dernierImpaye.totalPaye.toFixed(2)} €`, color: '#4ade80' },
-                  { label: 'Dont avoir', value: `${dernierImpaye.dontAvoir.toFixed(2)} €`, color: '#94a3b8' },
+                  { label: 'Total dû', value: `${dernierImpaye.totalDu.toFixed(2)} €`, cls: 'text-gray-700' },
+                  { label: 'Total payé', value: `${dernierImpaye.totalPaye.toFixed(2)} €`, cls: 'text-green-600' },
+                  { label: 'Dont avoir', value: `${dernierImpaye.dontAvoir.toFixed(2)} €`, cls: 'text-gray-500' },
                   {
                     label: 'Reste à payer',
                     value: dernierImpaye.resteAPayer < 0
                       ? `−${Math.abs(dernierImpaye.resteAPayer).toFixed(2)} €`
                       : `${dernierImpaye.resteAPayer.toFixed(2)} €`,
-                    color: dernierImpaye.resteAPayer < 0 ? '#a78bfa' : dernierImpaye.resteAPayer === 0 ? '#4ade80' : '#f87171',
+                    cls: dernierImpaye.resteAPayer < 0 ? 'text-purple-600' : dernierImpaye.resteAPayer === 0 ? 'text-green-600' : 'text-red-600',
                   },
                 ].map(item => (
-                  <div key={item.label} className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
-                    <div className="text-lg font-bold" style={{ color: item.color }}>{item.value}</div>
-                    <div className="text-xs text-slate-400 mt-1">{item.label}</div>
+                  <div key={item.label} className="rounded-lg border border-purple-100 bg-purple-50/50 p-3 text-center">
+                    <div className={`text-lg font-bold ${item.cls}`}>{item.value}</div>
+                    <div className="text-xs text-gray-400 mt-1">{item.label}</div>
                   </div>
                 ))}
               </div>
               {dernierImpaye.cours && (
-                <p className="text-sm text-slate-400">Cours : <span className="text-slate-300">{dernierImpaye.cours}</span></p>
+                <p className="text-sm text-gray-500">Cours : <span className="text-gray-700">{dernierImpaye.cours}</span></p>
               )}
               {dernierImpaye.commentaireInit && (
-                <div className="mt-3 p-3 rounded-lg text-sm text-slate-300 whitespace-pre-wrap" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <p className="text-xs text-slate-500 mb-1">Commentaire initial (GIPSE)</p>
+                <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-100 text-sm text-gray-700 whitespace-pre-wrap">
+                  <p className="text-xs text-gray-400 mb-1">Commentaire initial (GIPSE)</p>
                   {dernierImpaye.commentaireInit}
                 </div>
               )}
@@ -201,31 +199,31 @@ export default function FicheAdherent() {
           )}
 
           {/* Historique des contacts */}
-          <div className="rounded-xl border p-5" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)' }}>
-            <h2 className="font-semibold text-white mb-4">
+          <div className="rounded-xl border border-purple-100 bg-white shadow-sm p-5">
+            <h2 className="font-semibold text-purple-900 mb-4">
               Historique des relances
-              <span className="ml-2 text-sm font-normal text-slate-400">({adherent.contacts.length})</span>
+              <span className="ml-2 text-sm font-normal text-gray-400">({adherent.contacts.length})</span>
             </h2>
             {adherent.contacts.length === 0 && (
-              <p className="text-slate-500 text-sm">Aucun contact enregistré.</p>
+              <p className="text-gray-400 text-sm">Aucun contact enregistré.</p>
             )}
             <div className="space-y-3">
               {adherent.contacts.map(c => {
-                const tc = TYPE_CONTACT[c.type] ?? { label: c.type, color: '#94a3b8' };
+                const tc = TYPE_CONTACT[c.type] ?? { label: c.type, cls: 'bg-gray-100 text-gray-600 border-gray-200' };
                 return (
-                  <div key={c.id} className="flex gap-3 p-3 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                  <div key={c.id} className="flex gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: tc.color, backgroundColor: `${tc.color}18` }}>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${tc.cls}`}>
                           {tc.label}
                         </span>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-gray-400">
                           {new Date(c.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                         </span>
                       </div>
-                      {c.note && <p className="text-sm text-slate-300 whitespace-pre-wrap">{c.note}</p>}
+                      {c.note && <p className="text-sm text-gray-600 whitespace-pre-wrap">{c.note}</p>}
                     </div>
-                    <button onClick={() => supprimerContact(c.id)} className="text-slate-600 hover:text-red-400 text-xs self-start transition-colors">✕</button>
+                    <button onClick={() => supprimerContact(c.id)} className="text-gray-300 hover:text-red-500 text-xs self-start transition-colors">✕</button>
                   </div>
                 );
               })}
@@ -234,14 +232,14 @@ export default function FicheAdherent() {
 
           {/* Historique des imports */}
           {adherent.impayes.length > 1 && (
-            <div className="rounded-xl border p-5" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)' }}>
-              <h2 className="font-semibold text-white mb-4">Historique des imports</h2>
+            <div className="rounded-xl border border-purple-100 bg-white shadow-sm p-5">
+              <h2 className="font-semibold text-purple-900 mb-4">Historique des imports</h2>
               <div className="space-y-2">
                 {adherent.impayes.map(imp => (
-                  <div key={imp.id} className="flex items-center justify-between text-sm p-2 rounded" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
-                    <span className="text-slate-400">{imp.import.nomFichier}</span>
-                    <span className="text-xs text-slate-500">{new Date(imp.createdAt).toLocaleDateString('fr-FR')}</span>
-                    <span className="font-medium" style={{ color: imp.resteAPayer < 0 ? '#a78bfa' : imp.resteAPayer === 0 ? '#4ade80' : '#f87171' }}>
+                  <div key={imp.id} className="flex items-center justify-between text-sm p-2 rounded bg-gray-50 border border-gray-100">
+                    <span className="text-gray-500">{imp.import.nomFichier}</span>
+                    <span className="text-xs text-gray-400">{new Date(imp.createdAt).toLocaleDateString('fr-FR')}</span>
+                    <span className="font-medium" style={{ color: imp.resteAPayer < 0 ? '#9333ea' : imp.resteAPayer === 0 ? '#16a34a' : '#dc2626' }}>
                       {imp.resteAPayer < 0 ? `−${Math.abs(imp.resteAPayer).toFixed(2)}` : imp.resteAPayer.toFixed(2)} €
                     </span>
                   </div>
@@ -254,12 +252,12 @@ export default function FicheAdherent() {
         {/* Colonne latérale */}
         <div className="space-y-6">
           {/* Changer le statut */}
-          <div className="rounded-xl border p-5" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)' }}>
-            <h2 className="font-semibold text-white mb-3">Statut</h2>
+          <div className="rounded-xl border border-purple-100 bg-white shadow-sm p-5">
+            <h2 className="font-semibold text-purple-900 mb-3">Statut</h2>
             <select
               value={statutEdit}
               onChange={e => setStatutEdit(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg text-slate-200 bg-slate-800/50 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-400/40 text-sm mb-3"
+              className="w-full px-3 py-2 rounded-lg text-gray-700 bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm mb-3"
             >
               <option value="IMPAYES">Impayé</option>
               <option value="EN_COURS">En cours</option>
@@ -269,21 +267,20 @@ export default function FicheAdherent() {
             <button
               onClick={changerStatut}
               disabled={savingStatut || statutEdit === adherent.statut}
-              className="w-full py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
-              style={{ backgroundColor: '#F9CA24', color: '#1e293b' }}
+              className="w-full py-2 rounded-lg text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-40"
             >
               {savingStatut ? 'Sauvegarde…' : 'Mettre à jour'}
             </button>
           </div>
 
           {/* Ajouter un contact */}
-          <div className="rounded-xl border p-5" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)' }}>
-            <h2 className="font-semibold text-white mb-3">Ajouter une action</h2>
+          <div className="rounded-xl border border-purple-100 bg-white shadow-sm p-5">
+            <h2 className="font-semibold text-purple-900 mb-3">Ajouter une action</h2>
             <form onSubmit={ajouterContact} className="space-y-3">
               <select
                 value={typeContact}
                 onChange={e => setTypeContact(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg text-slate-200 bg-slate-800/50 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-400/40 text-sm"
+                className="w-full px-3 py-2 rounded-lg text-gray-700 bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm"
               >
                 {Object.entries(TYPE_CONTACT).map(([val, { label }]) => (
                   <option key={val} value={val}>{label}</option>
@@ -294,13 +291,12 @@ export default function FicheAdherent() {
                 onChange={e => setNoteContact(e.target.value)}
                 placeholder="Note (optionnelle)…"
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg text-slate-200 bg-slate-800/50 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-yellow-400/40 text-sm resize-none"
+                className="w-full px-3 py-2 rounded-lg text-gray-700 bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-sm resize-none"
               />
               <button
                 type="submit"
                 disabled={savingContact}
-                className="w-full py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40"
-                style={{ backgroundColor: 'rgba(249,194,36,0.15)', color: '#F9CA24', border: '1px solid rgba(249,194,36,0.3)' }}
+                className="w-full py-2 rounded-lg text-sm font-medium border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors disabled:opacity-40"
               >
                 {savingContact ? 'Enregistrement…' : '+ Ajouter'}
               </button>
