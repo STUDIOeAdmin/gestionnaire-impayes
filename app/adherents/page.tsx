@@ -233,9 +233,14 @@ export default function AdherentsPage() {
                           </span>
                         )}
                       </div>
-                      {a.familleMembers.length > 0 && (
+                      {a.famille && (
                         <div className="text-xs text-slate-500 mt-0.5">
-                          {a.familleMembers.map(m => `${m.prenom} (n°${m.numeroDossier})`).join(' · ')}
+                          {a.famille.replace(/ - \([SP]\)$/, '')}
+                          {a.familleMembers.length > 0 && (
+                            <span className="ml-1">
+                              — {a.familleMembers.map(m => `${m.prenom} (n°${m.numeroDossier})`).join(' · ')}
+                            </span>
+                          )}
                         </div>
                       )}
                     </td>
