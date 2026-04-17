@@ -1,0 +1,127 @@
+// Gestionnaire d'Impayés — Studio e Danse
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// === AUTHENTIFICATION ===
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  role          String    @default("USER")
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// === FIN AUTHENTIFICATION ===
+
+// Snapshot d'import (une ligne par import de fichier GIPSE)
+model Import {
+  id          String     @id @default(cuid())
+  nomFichier  String
+  dateExtract DateTime?  // date mentionnée dans le fichier (ex: 27 déc 2025)
+  nbAdherents Int
+  totalAPayer Float      // total "Reste à payer" positifs
+  totalTropPercu Float   // total "Reste à payer" négatifs (valeur absolue)
+  impayes     Impaye[]
+  createdAt   DateTime   @default(now())
+}
+
+// Adhérent impayé (persistant entre les imports)
+model Adherent {
+  id              String    @id @default(cuid())
+  numeroDossier   Int       @unique
+  nom             String
+  prenom          String
+  famille         String?   // "DUPONT - (S)", "DUPONT - (P)"
+  statut          String    @default("IMPAYES")
+  // IMPAYES | TROP_PERCU | EN_COURS | REGULARISE
+  contacts        Contact[]
+  impayes         Impaye[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([nom])
+  @@index([statut])
+}
+
+// Ligne financière issue d'un import (une par adhérent par import)
+model Impaye {
+  id            String    @id @default(cuid())
+  adherentId    String
+  adherent      Adherent  @relation(fields: [adherentId], references: [id], onDelete: Cascade)
+  importId      String
+  import        Import    @relation(fields: [importId], references: [id], onDelete: Cascade)
+  cours         String?   // cours principal (vue "Tri par cours")
+  totalDu       Float
+  dontRbst      Float     @default(0)
+  totalPaye     Float
+  dontAvoir     Float     @default(0)
+  resteAPayer   Float     // négatif = trop-perçu
+  commentaireInit String? @db.Text
+  createdAt     DateTime  @default(now())
+
+  @@index([adherentId])
+  @@index([importId])
+}
+
+// Suivi des contacts/relances sur un adhérent
+model Contact {
+  id          String    @id @default(cuid())
+  adherentId  String
+  adherent    Adherent  @relation(fields: [adherentId], references: [id], onDelete: Cascade)
+  date        DateTime  @default(now())
+  type        String    // DC | MAIL | SMS | PASSAGE | NOTE | REGULARISE
+  note        String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  @@index([adherentId])
+  @@index([date])
+}
