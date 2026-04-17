@@ -32,40 +32,46 @@ function toFloat(v: unknown): number {
 }
 
 function parseSheet(wb: XLSX.WorkBook): { rows: RowNom[]; coursByDossier: Map<number, string> } {
-  // Feuille "Tri par nom" — en-tête ligne 8 (index 7), données à partir de ligne 9
+  // Feuille "Tri par nom"
+  // xlsx supprime la colonne A (vide) — indices décalés de -1 vs openpyxl
+  // En-tête index 7, données à partir de index 8
+  // r[0]=Nom,Prénom  r[1]=N°dossier  r[2]=Famille  r[3]=TotalDû  r[4]=dontRbst
+  // r[5]=TotalPayé   r[6]=dontAvoir  r[7]=ResteàPayer  r[10]=Commentaires
   const wsNom = wb.Sheets['Tri par nom'];
   const rawNom: unknown[][] = XLSX.utils.sheet_to_json(wsNom, { header: 1, defval: null });
 
   const rows: RowNom[] = [];
   for (let i = 8; i < rawNom.length; i++) {
     const r = rawNom[i] as unknown[];
-    const nomRaw = r[1];
-    const dossierRaw = r[2];
+    const nomRaw = r[0];
+    const dossierRaw = r[1];
     if (!nomRaw || typeof nomRaw !== 'string') continue;
     const dossier = Math.round(toFloat(dossierRaw));
     if (!dossier) continue;
 
     const { nom, prenom } = parseNom(nomRaw);
-    const famille = r[3] ? String(r[3]).trim() : null;
-    const totalDu = toFloat(r[4]);
-    const dontRbst = toFloat(r[5]);
-    const totalPaye = toFloat(r[6]);
-    const dontAvoir = toFloat(r[7]);
-    const resteAPayer = toFloat(r[8]);
-    const commentaire = r[11] ? String(r[11]).trim() : null;
+    const famille = r[2] ? String(r[2]).trim() : null;
+    const totalDu = toFloat(r[3]);
+    const dontRbst = toFloat(r[4]);
+    const totalPaye = toFloat(r[5]);
+    const dontAvoir = toFloat(r[6]);
+    const resteAPayer = toFloat(r[7]);
+    const commentaire = r[10] ? String(r[10]).trim() : null;
 
     rows.push({ nom, prenom, numeroDossier: dossier, famille, totalDu, dontRbst, totalPaye, dontAvoir, resteAPayer, commentaire });
   }
 
-  // Feuille "Tri par cours" — en-tête ligne 4 (index 3), données à partir de ligne 5
+  // Feuille "Tri par cours"
+  // r[0]=Cours  r[1]=N°dossier  r[2]=Nom,Prénom  r[3]=Famille ...
+  // En-tête index 3, données à partir de index 4
   const wsCours = wb.Sheets['Tri par cours'];
   const coursByDossier = new Map<number, string>();
   if (wsCours) {
     const rawCours: unknown[][] = XLSX.utils.sheet_to_json(wsCours, { header: 1, defval: null });
     for (let i = 4; i < rawCours.length; i++) {
       const r = rawCours[i] as unknown[];
-      const cours = r[1];
-      const dossierRaw = r[2];
+      const cours = r[0];
+      const dossierRaw = r[1];
       if (!cours || typeof cours !== 'string') continue;
       const dossier = Math.round(toFloat(dossierRaw));
       if (!dossier || coursByDossier.has(dossier)) continue;

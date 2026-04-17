@@ -2,13 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
 
+const MENSUALISE_KEYWORDS = ['vir permanent', 'mensualit', 'vir perm'];
+function isMensualise(commentaire: string | null): boolean {
+  if (!commentaire) return false;
+  const lower = commentaire.toLowerCase();
+  return MENSUALISE_KEYWORDS.some(kw => lower.includes(kw));
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const statut = searchParams.get('statut') ?? 'tous';
+  const format = searchParams.get('format') ?? 'complet'; // 'complet' | 'simple'
+  const exclureMensualises = searchParams.get('exclureMensualises') === '1';
+  const seulementDemarches = searchParams.get('seulementDemarches') === '1';
 
-  const where = statut !== 'tous' ? { statut } : {};
+  const where: Record<string, unknown> = statut !== 'tous' ? { statut } : {};
 
-  const adherents = await prisma.adherent.findMany({
+  if (seulementDemarches) {
+    where.contacts = { some: { type: { in: ['MAIL', 'SMS'] } } };
+  }
+
+  let adherents = await prisma.adherent.findMany({
     where,
     include: {
       impayes: { orderBy: { createdAt: 'desc' }, take: 1 },
@@ -17,42 +31,58 @@ export async function GET(req: NextRequest) {
     orderBy: { nom: 'asc' },
   });
 
-  const rows = adherents.map(a => {
-    const imp = a.impayes[0];
-    const derniereAction = a.contacts[0];
-    return {
-      'Nom': a.nom,
-      'Prénom': a.prenom,
-      'N° dossier': a.numeroDossier,
-      'Famille': a.famille ?? '',
-      'Cours': imp?.cours ?? '',
-      'Total dû (€)': imp?.totalDu ?? '',
-      'Total payé (€)': imp?.totalPaye ?? '',
-      'Dont avoir (€)': imp?.dontAvoir ?? '',
-      'Reste à payer (€)': imp?.resteAPayer ?? '',
-      'Statut': a.statut,
-      'Nb relances': a.contacts.length,
-      'Dernière action': derniereAction
-        ? `${new Date(derniereAction.date).toLocaleDateString('fr-FR')} — ${derniereAction.type}${derniereAction.note ? ` : ${derniereAction.note}` : ''}`
-        : '',
-      'Commentaire initial (GIPSE)': imp?.commentaireInit ?? '',
-    };
-  });
+  if (exclureMensualises) {
+    adherents = adherents.filter(a => !isMensualise(a.impayes[0]?.commentaireInit ?? null));
+  }
 
-  const ws = XLSX.utils.json_to_sheet(rows);
+  let ws: XLSX.WorkSheet;
+  let sheetName: string;
+
+  if (format === 'simple') {
+    const rows = adherents.map(a => ({
+      'Nom': `${a.nom}, ${a.prenom}`,
+      'Reste à payer (€)': a.impayes[0]?.resteAPayer ?? '',
+    }));
+    ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 30 }, { wch: 18 }];
+    sheetName = 'Relances';
+  } else {
+    const rows = adherents.map(a => {
+      const imp = a.impayes[0];
+      const derniereAction = a.contacts[0];
+      return {
+        'Nom': a.nom,
+        'Prénom': a.prenom,
+        'N° dossier': a.numeroDossier,
+        'Famille': a.famille ?? '',
+        'Cours': imp?.cours ?? '',
+        'Total dû (€)': imp?.totalDu ?? '',
+        'Total payé (€)': imp?.totalPaye ?? '',
+        'Dont avoir (€)': imp?.dontAvoir ?? '',
+        'Reste à payer (€)': imp?.resteAPayer ?? '',
+        'Statut': a.statut,
+        'Nb relances': a.contacts.length,
+        'Dernière action': derniereAction
+          ? `${new Date(derniereAction.date).toLocaleDateString('fr-FR')} — ${derniereAction.type}${derniereAction.note ? ` : ${derniereAction.note}` : ''}`
+          : '',
+        'Commentaire initial (GIPSE)': imp?.commentaireInit ?? '',
+      };
+    });
+    ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 20 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 30 },
+      { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 },
+      { wch: 12 }, { wch: 40 }, { wch: 50 },
+    ];
+    sheetName = 'Impayés';
+  }
+
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Impayés');
-
-  // Largeurs de colonnes
-  ws['!cols'] = [
-    { wch: 20 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 30 },
-    { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 },
-    { wch: 12 }, { wch: 40 }, { wch: 50 },
-  ];
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
   const date = new Date().toISOString().split('T')[0];
-  const filename = `impayes-${statut}-${date}.xlsx`;
+  const filename = `impayes-${format === 'simple' ? 'relances' : statut}-${date}.xlsx`;
 
   return new NextResponse(buffer, {
     headers: {
