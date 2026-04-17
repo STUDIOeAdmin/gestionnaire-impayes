@@ -15,11 +15,15 @@ export async function GET(req: NextRequest) {
   const format = searchParams.get('format') ?? 'complet'; // 'complet' | 'simple'
   const exclureMensualises = searchParams.get('exclureMensualises') === '1';
   const seulementDemarches = searchParams.get('seulementDemarches') === '1';
+  const exclureDemarches = searchParams.get('exclureDemarches') === '1';
 
+  const typesDemarche = ['MAIL', 'SMS', 'TEL'];
   const where: Record<string, unknown> = statut !== 'tous' ? { statut } : {};
 
   if (seulementDemarches) {
-    where.contacts = { some: { type: { in: ['MAIL', 'SMS'] } } };
+    where.contacts = { some: { type: { in: typesDemarche } } };
+  } else if (exclureDemarches) {
+    where.contacts = { none: { type: { in: typesDemarche } } };
   }
 
   let adherents = await prisma.adherent.findMany({

@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
   const statut = searchParams.get('statut') ?? '';
   const exclureMensualises = searchParams.get('exclureMensualises') === '1';
   const seulementDemarches = searchParams.get('seulementDemarches') === '1';
+  const exclureDemarches = searchParams.get('exclureDemarches') === '1';
 
   const where: Record<string, unknown> = {};
 
@@ -30,11 +31,12 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  // Filtre : seulement ceux qui ont été démarchés par mail ou SMS
+  const typesDemarche = ['MAIL', 'SMS', 'TEL'];
+
   if (seulementDemarches) {
-    where.contacts = {
-      some: { type: { in: ['MAIL', 'SMS'] } },
-    };
+    where.contacts = { some: { type: { in: typesDemarche } } };
+  } else if (exclureDemarches) {
+    where.contacts = { none: { type: { in: typesDemarche } } };
   }
 
   const adherents = await prisma.adherent.findMany({

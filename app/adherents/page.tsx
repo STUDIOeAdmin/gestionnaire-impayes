@@ -45,6 +45,7 @@ export default function AdherentsPage() {
   const [statutFilter, setStatutFilter] = useState('');
   const [exclureMensualises, setExclureMensualises] = useState(false);
   const [seulementDemarches, setSeulementDemarches] = useState(false);
+  const [exclureDemarches, setExclureDemarches] = useState(false);
   const [triPar, setTriPar] = useState<'nom' | 'reste' | 'statut'>('reste');
   const [triDesc, setTriDesc] = useState(true);
 
@@ -56,6 +57,7 @@ export default function AdherentsPage() {
       if (statutFilter) params.set('statut', statutFilter);
       if (exclureMensualises) params.set('exclureMensualises', '1');
       if (seulementDemarches) params.set('seulementDemarches', '1');
+      if (exclureDemarches) params.set('exclureDemarches', '1');
       const res = await fetch(`/api/adherents?${params}`);
       const data = await res.json();
       setAdherents(data);
@@ -64,7 +66,7 @@ export default function AdherentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, statutFilter, exclureMensualises, seulementDemarches]);
+  }, [search, statutFilter, exclureMensualises, seulementDemarches, exclureDemarches]);
 
   useEffect(() => {
     const t = setTimeout(fetchAdherents, 300);
@@ -89,6 +91,7 @@ export default function AdherentsPage() {
     const p = new URLSearchParams({ format, statut });
     if (exclureMensualises) p.set('exclureMensualises', '1');
     if (seulementDemarches) p.set('seulementDemarches', '1');
+    if (exclureDemarches) p.set('exclureDemarches', '1');
     return p.toString();
   };
 
@@ -151,10 +154,19 @@ export default function AdherentsPage() {
             <input
               type="checkbox"
               checked={seulementDemarches}
-              onChange={e => setSeulementDemarches(e.target.checked)}
+              onChange={e => { setSeulementDemarches(e.target.checked); if (e.target.checked) setExclureDemarches(false); }}
               className="w-4 h-4 rounded accent-yellow-400"
             />
-            <span className="text-sm text-slate-300">Déjà démarchés (mail ou SMS)</span>
+            <span className="text-sm text-slate-300">Déjà démarchés (mail, SMS ou tél.)</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={exclureDemarches}
+              onChange={e => { setExclureDemarches(e.target.checked); if (e.target.checked) setSeulementDemarches(false); }}
+              className="w-4 h-4 rounded accent-yellow-400"
+            />
+            <span className="text-sm text-slate-300">Exclure les déjà démarchés (mail, SMS ou tél.)</span>
           </label>
         </div>
 

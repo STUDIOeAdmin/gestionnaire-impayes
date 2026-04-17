@@ -35,12 +35,13 @@ interface AdherentDetail {
 }
 
 const TYPE_CONTACT: Record<string, { label: string; color: string }> = {
-  DC:         { label: 'Démarche contact', color: '#F9CA24' },
-  MAIL:       { label: 'Mail',             color: '#60a5fa' },
-  SMS:        { label: 'SMS',              color: '#34d399' },
-  PASSAGE:    { label: 'Passage caisse',   color: '#fb923c' },
-  NOTE:       { label: 'Note',             color: '#94a3b8' },
-  REGULARISE: { label: 'Régularisé',       color: '#4ade80' },
+  DC:         { label: 'Démarche contact',    color: '#F9CA24' },
+  MAIL:       { label: 'Mail',                color: '#60a5fa' },
+  SMS:        { label: 'SMS',                 color: '#34d399' },
+  TEL:        { label: 'Appel téléphonique',  color: '#f472b6' },
+  PASSAGE:    { label: 'Passage caisse',      color: '#fb923c' },
+  NOTE:       { label: 'Note',                color: '#94a3b8' },
+  REGULARISE: { label: 'Régularisé',          color: '#4ade80' },
 };
 
 const STATUT_STYLES: Record<string, { label: string; color: string; bg: string }> = {
