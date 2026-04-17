@@ -47,7 +47,9 @@ function NavBar() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center space-x-3">
-              <span className="text-sm text-slate-400">{session.user?.name}</span>
+              <a href="/profil" className="text-sm text-slate-400 hover:text-yellow-400 transition-colors">
+                {session.user?.name}
+              </a>
               <button
                 onClick={() => signOut({ callbackUrl: '/login' })}
                 className="px-3 py-1.5 rounded-md text-sm font-medium text-slate-300 hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors"
@@ -79,9 +81,14 @@ function NavBar() {
           ))}
           <div className="px-4 py-3">
             <p className="text-xs text-slate-500 mb-2">{session.user?.name}</p>
-            <button onClick={() => signOut({ callbackUrl: '/login' })} className="text-sm font-medium text-slate-300 hover:text-yellow-400">
-              Déconnexion
-            </button>
+            <div className="space-y-2">
+              <a href="/profil" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-slate-300 hover:text-yellow-400">
+                Mon profil
+              </a>
+              <button onClick={() => signOut({ callbackUrl: '/login' })} className="text-sm font-medium text-slate-300 hover:text-yellow-400">
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       )}
