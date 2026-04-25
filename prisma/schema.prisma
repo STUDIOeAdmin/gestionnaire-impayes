@@ -80,6 +80,7 @@ model Adherent {
   numeroDossier   Int       @unique
   nom             String
   prenom          String
+  dateNaissance   DateTime?
   famille         String?   // "DUPONT - (S)", "DUPONT - (P)"
   statut          String    @default("IMPAYES")
   // IMPAYES | TROP_PERCU | EN_COURS | REGULARISE

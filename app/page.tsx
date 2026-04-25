@@ -19,6 +19,8 @@ interface Stats {
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [importingDates, setImportingDates] = useState(false);
+  const [importDatesMsg, setImportDatesMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -33,6 +35,36 @@ export default function Dashboard() {
   };
 
   useEffect(() => { fetchStats(); }, []);
+
+  const handleImportDatesNaissance = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingDates(true);
+    setImportDatesMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/import-dates-naissance', { method: 'POST', body: fd });
+      const result = await res.json();
+      if (res.ok) {
+        const notFoundTxt = result.notFound > 0
+          ? ` \u00b7 ${result.notFound} non trouv\u00e9(s)${result.notFoundList?.length ? ` : ${result.notFoundList.join(', ')}${result.notFound > result.notFoundList.length ? '\u2026' : ''}` : ''}`
+          : '';
+        const skippedTxt = result.skipped > 0 ? ` \u00b7 ${result.skipped} ignor\u00e9(s)` : '';
+        setImportDatesMsg({
+          type: 'success',
+          text: `${result.updated} date(s) mise(s) \u00e0 jour${notFoundTxt}${skippedTxt}`,
+        });
+      } else {
+        setImportDatesMsg({ type: 'error', text: result.error || 'Erreur inconnue' });
+      }
+    } catch (err) {
+      setImportDatesMsg({ type: 'error', text: (err as Error).message });
+    } finally {
+      setImportingDates(false);
+      e.target.value = '';
+    }
+  };
 
   const statCards = stats ? [
     { label: 'Total à percevoir', value: `${stats.totalAPayer.toFixed(2)} €`, colorClass: 'text-red-500', borderClass: 'border-red-100' },
@@ -125,16 +157,46 @@ export default function Dashboard() {
             <h2 className="font-semibold text-purple-900">Export</h2>
           </div>
           <div className="space-y-2">
-            <a href="/api/export?statut=IMPAYES" className="block w-full px-3 py-2 rounded-lg text-sm text-center border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors">
-              Export Impayés
+            <a href="/api/export?statut=IMPAYES&format=simple" className="block w-full px-3 py-2 rounded-lg text-sm text-center border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors font-medium">
+              Export Relances Impayés
             </a>
-            <a href="/api/export?statut=TROP_PERCU" className="block w-full px-3 py-2 rounded-lg text-sm text-center border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors">
+            <a href="/api/export?statut=IMPAYES" className="block w-full px-3 py-2 rounded-lg text-sm text-center border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+              Export détaillé Impayés
+            </a>
+            <a href="/api/export?statut=TROP_PERCU" className="block w-full px-3 py-2 rounded-lg text-sm text-center border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
               Export Trop-perçus
             </a>
-            <a href="/api/export?statut=tous" className="block w-full px-3 py-2 rounded-lg text-sm text-center border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors">
-              Export complet
-            </a>
           </div>
+        </div>
+
+        {/* Import dates de naissance */}
+        <div className="rounded-xl border border-purple-100 bg-white shadow-sm p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
+              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="font-semibold text-purple-900">Dates de naissance</h2>
+          </div>
+          <p className="text-gray-500 text-xs mb-3">
+            Import depuis l&apos;export BdD Membres (matching par N° de dossier).
+          </p>
+          <label className={`block w-full px-3 py-2 rounded-lg text-sm text-center border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors cursor-pointer ${importingDates ? 'opacity-50 pointer-events-none' : ''}`}>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.xlsm,.csv"
+              onChange={handleImportDatesNaissance}
+              disabled={importingDates}
+              className="hidden"
+            />
+            {importingDates ? 'Import en cours\u2026' : 'Importer dates de naissance'}
+          </label>
+          {importDatesMsg && (
+            <p className={`mt-2 text-xs ${importDatesMsg.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+              {importDatesMsg.type === 'success' ? '\u2713 ' : ''}{importDatesMsg.text}
+            </p>
+          )}
         </div>
       </div>
     </div>

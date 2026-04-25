@@ -12,7 +12,7 @@ function isMensualise(commentaire: string | null): boolean {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const statut = searchParams.get('statut') ?? 'tous';
-  const format = searchParams.get('format') ?? 'complet'; // 'complet' | 'simple'
+  const format = searchParams.get('format') ?? 'complet'; // 'complet' | 'simple' | 'relance-naiss'
   const exclureMensualises = searchParams.get('exclureMensualises') === '1';
   const seulementDemarches = searchParams.get('seulementDemarches') === '1';
   const exclureDemarches = searchParams.get('exclureDemarches') === '1';
@@ -44,12 +44,15 @@ export async function GET(req: NextRequest) {
 
   if (format === 'simple') {
     const rows = adherents.map(a => ({
-      'N° dossier': a.numeroDossier,
-      'Nom': `${a.nom}, ${a.prenom}`,
-      'Reste à payer (€)': a.impayes[0]?.resteAPayer ?? '',
+      'Nom, Prénom': `${a.nom}, ${a.prenom}`,
+      'Date de naissance': a.dateNaissance
+        ? new Date(a.dateNaissance).toLocaleDateString('fr-FR', { timeZone: 'UTC' })
+        : '',
+      'Montant dû (€)': a.impayes[0]?.resteAPayer ?? '',
+      'Raison': 'paiement concours',
     }));
     ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 12 }, { wch: 30 }, { wch: 18 }];
+    ws['!cols'] = [{ wch: 30 }, { wch: 16 }, { wch: 16 }, { wch: 20 }];
     sheetName = 'Relances';
   } else {
     const rows = adherents.map(a => {
@@ -59,6 +62,9 @@ export async function GET(req: NextRequest) {
         'N° dossier': a.numeroDossier,
         'Nom': a.nom,
         'Prénom': a.prenom,
+        'Date de naissance': a.dateNaissance
+          ? new Date(a.dateNaissance).toLocaleDateString('fr-FR', { timeZone: 'UTC' })
+          : '',
         'Famille': a.famille ?? '',
         'Cours': imp?.cours ?? '',
         'Total dû (€)': imp?.totalDu ?? '',
@@ -75,7 +81,7 @@ export async function GET(req: NextRequest) {
     });
     ws = XLSX.utils.json_to_sheet(rows);
     ws['!cols'] = [
-      { wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 20 }, { wch: 30 },
+      { wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, { wch: 20 }, { wch: 30 },
       { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 14 },
       { wch: 12 }, { wch: 40 }, { wch: 50 },
     ];

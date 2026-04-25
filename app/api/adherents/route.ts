@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
     numeroDossier: a.numeroDossier,
     nom: a.nom,
     prenom: a.prenom,
+    dateNaissance: a.dateNaissance,
     famille: a.famille,
     familleMembers: a.famille
       ? (familleIndex.get(a.famille) ?? []).filter(m => m.id !== a.id)

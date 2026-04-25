@@ -8,6 +8,7 @@ interface Adherent {
   numeroDossier: number;
   nom: string;
   prenom: string;
+  dateNaissance: string | null;
   famille: string | null;
   familleMembers: { prenom: string; numeroDossier: number }[];
   statut: string;
@@ -154,15 +155,15 @@ export default function AdherentsPage() {
 
         <div className="flex flex-wrap gap-2 pt-1 border-t border-purple-50">
           <span className="text-xs text-gray-400 self-center">Export :</span>
-          <a href={`/api/export?${exportParams('simple', statutFilter || 'tous')}`}
+          <a href={`/api/export?${exportParams('simple', statutFilter || 'IMPAYES')}`}
             className="px-3 py-1.5 rounded-lg text-xs font-medium border border-purple-200 text-purple-700 hover:bg-purple-50 transition-colors"
           >
-            Nom + Reste à payer
+            Export Relances
           </a>
           <a href={`/api/export?${exportParams('complet', statutFilter || 'tous')}`}
             className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
           >
-            Export complet
+            Export détaillé
           </a>
         </div>
       </div>
@@ -174,6 +175,7 @@ export default function AdherentsPage() {
             <thead className="bg-purple-50 border-b border-purple-100">
               <tr>
                 <th className="px-4 py-3 text-left"><ThBtn col="nom" label="Adhérent" /></th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-purple-600 uppercase tracking-wider">Date naiss.</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-purple-600 uppercase tracking-wider">N° dossier</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-purple-600 uppercase tracking-wider">Cours</th>
                 <th className="px-4 py-3 text-left"><ThBtn col="reste" label="Reste à payer" /></th>
@@ -186,10 +188,10 @@ export default function AdherentsPage() {
             </thead>
             <tbody>
               {loading && (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-purple-400">Chargement…</td></tr>
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-purple-400">Chargement…</td></tr>
               )}
               {!loading && sorted.length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Aucun résultat</td></tr>
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-400">Aucun résultat</td></tr>
               )}
               {!loading && sorted.map((a, i) => {
                 const reste = a.dernierImpaye?.resteAPayer ?? 0;
@@ -222,6 +224,7 @@ export default function AdherentsPage() {
                         </div>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{a.dateNaissance ? new Date(a.dateNaissance).toLocaleDateString('fr-FR', { timeZone: 'UTC' }) : '—'}</td>
                     <td className="px-4 py-3 text-gray-500">{a.numeroDossier}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs max-w-[140px] truncate">{a.dernierImpaye?.cours ?? '—'}</td>
                     <td className="px-4 py-3 font-semibold" style={{ color: reste < 0 ? '#9333ea' : reste === 0 ? '#16a34a' : '#dc2626' }}>
