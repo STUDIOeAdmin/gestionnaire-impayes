@@ -141,6 +141,9 @@ export async function POST(req: NextRequest) {
         created++;
       }
 
+      // Supprimer les anciens impayés pour cet adhérent (le nouvel import écrase)
+      await prisma.impaye.deleteMany({ where: { adherentId } });
+
       await prisma.impaye.create({
         data: {
           adherentId,
